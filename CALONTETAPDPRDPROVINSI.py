@@ -33,20 +33,20 @@ def pilih_dapil_aceh_1(current_page=1):
         select_element = wait.until(EC.presence_of_element_located((By.ID, "filterDapil")))
         select = Select(select_element)
         select.select_by_visible_text("ACEH 1")
-        time.sleep(15)
+        time.sleep(20)
 
         # Pilih 100 entries
         entries_select = wait.until(EC.presence_of_element_located((By.NAME, "tbl_ms_nasional_length")))
         entries_dropdown = Select(entries_select)
         entries_dropdown.select_by_value("100")
-        time.sleep(5)  # Tunggu halaman memuat ulang
+        time.sleep(1)  # Tunggu halaman memuat ulang
 
         # Scroll ke bawah hingga mentok
         last_height = driver.execute_script("return document.body.scrollHeight")
         while True:
             # Scroll ke bawah
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(2)  # Tunggu agar halaman memuat data baru (jika ada)
+            time.sleep(5)  # Tunggu agar halaman memuat data baru (jika ada)
             
             # Periksa apakah sudah mentok
             new_height = driver.execute_script("return document.body.scrollHeight")
@@ -78,7 +78,7 @@ try:
     current_page = 1
     pilih_dapil_aceh_1(current_page)
 
-    processed_kandidat = 100
+    processed_kandidat = 99
     max_kandidat = float('inf')  # Scraping semua kandidat
 
     while processed_kandidat < max_kandidat:
@@ -95,7 +95,7 @@ try:
                     if 'disabled' not in next_button.get_attribute('class'):
                         next_button.click()
                         current_page += 1  # Increment halaman
-                        time.sleep(10)  # Tunggu halaman memuat
+                        time.sleep(13)  # Tunggu halaman memuat
                         
                         # Setelah klik Next, update rows
                         rows = driver.find_elements(By.CSS_SELECTOR, "tr.odd, tr.even")
@@ -148,29 +148,6 @@ try:
                     except NoSuchElementException:
                                 print(f"Data nomor urut untuk kandidat ke-{processed_kandidat + 1} tidak ditemukan.")
 
-                                                
-                        # Scrap motivasi calon
-                    try:
-                            motivasi_container = driver.find_element(By.XPATH, "//div[h3[text()='MOTIVASI CALON']]")
-                            motivasi_element = motivasi_container.find_element(By.TAG_NAME, "li")
-                            motivasi_text = motivasi_element.find_element(By.TAG_NAME, "strong").text.strip()
-                            
-                            # Pisahkan ke bagian motivasi dan misi
-                            motivasi_parts = motivasi_text.split("Misi:")
-                            if len(motivasi_parts) > 1:
-                                motivasi = motivasi_parts[0].strip()
-                                misi = [line.strip() for line in motivasi_parts[1].split("\n") if line.strip()]
-                            else:
-                                motivasi = motivasi_text
-                                misi = []
-                        
-                            # Simpan data ke dalam dictionary
-                            data['motivasi'] = motivasi
-                            data['misi'] = misi
-                    except NoSuchElementException:
-                            print(f"Data motivasi calon untuk kandidat ke-{processed_kandidat + 1} tidak ditemukan.")
-
-    
                             # Scrap data alamat
                     try:
                                 alamat_container = driver.find_element(By.XPATH, "//div[h3[text()='ALAMAT']]")
