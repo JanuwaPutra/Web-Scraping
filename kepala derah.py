@@ -153,7 +153,7 @@ def scrape_kpu_data():
                 apk_table = kampanye_tables[1]
                 apk_rows = apk_table.find_elements(By.TAG_NAME, "tr")[1:]  # Skip header row
                 apk_data = []
-                
+            
                 for row in apk_rows:
                     cols = row.find_elements(By.TAG_NAME, "td")
                     
@@ -161,24 +161,24 @@ def scrape_kpu_data():
                     maps_iframe = cols[-1].find_elements(By.TAG_NAME, "iframe")
                     maps_link = maps_iframe[0].get_attribute('src') if maps_iframe else "Data tidak ditemukan."
                     
-                    # Ekstrak latitude dan longitude dari URL
-                    latitude, longitude = None, None
-                    match = re.search(r'!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)', maps_link)
+                    # Ekstrak koordinat dari link (regex untuk mengekstrak angka setelah "marker=")
+                    match = re.search(r"marker=(-?\d+\.\d+),(-?\d+\.\d+)", maps_link)
                     if match:
-                        latitude = match.group(1)
-                        longitude = match.group(2)
-                    
+                        latitude = match.group(1)  # -7.885
+                        longitude = match.group(2)  # 113.677
+                        coordinates = f"{latitude},{longitude}"
+                    else:
+                        coordinates = "Koordinat tidak ditemukan"
+            
                     # Buat baris data tanpa kolom iframe terakhir
                     row_data = [col.text for col in cols[:-1]]
-                    row_data.append(maps_link)  # Tambahkan link maps
-                    row_data.append(latitude)  # Tambahkan latitude
-                    row_data.append(longitude)  # Tambahkan longitude
+                    row_data.append(coordinates)  # Tambahkan koordinat
                     apk_data.append(row_data)
             
                 # Simpan ke CSV Laporan APK dengan nama yang berbeda berdasarkan index
-                with open(os.path.join(subfolder_path,f"laporan_apk_calon_{index + 1}.csv"), "w", newline="", encoding="utf-8") as file:
+                with open(os.path.join(subfolder_path, f"laporan_apk_calon_{index + 1}.csv"), "w", newline="", encoding="utf-8") as file:
                     writer = csv.writer(file)
-                    writer.writerow(["Tanggal pemasangan", "Jenis APK", "Jumlah Pemasangan", "Alamat Pemasangan", "Provinsi Pemasangan", "Kabupaten Pemasangan", "Link Maps", "Latitude", "Longitude"])
+                    writer.writerow(["Tanggal pemasangan", "Jenis APK", "Jumlah Pemasangan", "Alamat Pemasangan", "Provinsi Pemasangan", "Kabupaten Pemasangan", "Koordinat"])
                     writer.writerows(apk_data)
             
                 print(f"Data Laporan APK {index + 1} berhasil disimpan.")
