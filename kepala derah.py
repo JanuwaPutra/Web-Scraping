@@ -4,11 +4,53 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+from bs4 import BeautifulSoup
 import csv
 import time
 import traceback
 import re
 import os
+
+def bersihkan_data(tabel):
+    """Membersihkan data tabel dengan menghapus elemen kosong."""
+    return [row for row in tabel if any(cell.strip() for cell in row)]
+
+def extract_profile_data(soup):
+    """Ekstrak data profil dari HTML."""
+    profile_data = {}
+    profile_data['nama'] = soup.find('h4').text.strip()
+    
+    # Ekstrak informasi dasar
+    rows = soup.find_all('div', class_='row')[1].find_all('p')
+    for row in rows:
+        key = row.find('strong').text.replace(':', '').strip()
+        value = row.text.replace(row.find('strong').text, '').replace(':', '').strip()
+        profile_data[key] = value
+    
+    # Ekstrak pekerjaan
+    pekerjaan = soup.find('ul', class_='text-left')
+    if pekerjaan:
+        profile_data['Pekerjaan'] = pekerjaan.find('li').text.strip()
+    
+    return profile_data
+
+def extract_table_data(soup, table_title):
+    """Ekstrak data dari tabel berdasarkan judul."""
+    tables = soup.find_all('table', class_='table-bordered')
+    for table in tables:
+        header = table.find('tr').text.strip()
+        if table_title in header:
+            rows = []
+            header_row = [th.text.strip() for th in table.find_all('tr')[1].find_all('th')]
+            rows.append(header_row)
+            
+            for row in table.find_all('tr')[2:]:
+                cells = [td.text.strip() for td in row.find_all('td')]
+                if not all(cell == 'Data tidak ada' for cell in cells):
+                    rows.append(cells)
+            
+            return rows
+    return []
 
 def scrape_kpu_data():
     # Konfigurasi Chrome WebDriver
@@ -22,6 +64,8 @@ def scrape_kpu_data():
     driver = webdriver.Chrome(service=service, options=options)
 
     try:
+        jenis_pemilihan = "Gubernur"
+        provinsi = "PROVINSI JAWA TIMUR"
         # Buka halaman web
         driver.get('https://infopemilu.kpu.go.id/Pemilihan/Pasangan_calon')
 
@@ -30,7 +74,7 @@ def scrape_kpu_data():
             EC.presence_of_element_located((By.ID, 'jenis_pemilihan'))
         )
         jenis_pemilihan_select.click()
-        driver.find_element(By.XPATH, "//option[@value='Gubernur']").click()
+        driver.find_element(By.XPATH, f"//option[@value='{jenis_pemilihan}']").click()
 
         # Pilih wilayah Provinsi Jawa Timur
         wilayah_select = WebDriverWait(driver, 15).until(
@@ -41,10 +85,10 @@ def scrape_kpu_data():
         search_box = WebDriverWait(driver, 15).until(
             EC.presence_of_element_located((By.XPATH, "//input[@class='select2-search__field']"))
         )
-        search_box.send_keys("PROVINSI JAWA TIMUR")
+        search_box.send_keys(f"{provinsi}")
         time.sleep(2)
         option = WebDriverWait(driver, 15).until(
-            EC.presence_of_element_located((By.XPATH, "//li[contains(@class, 'select2-results__option') and text()='PROVINSI JAWA TIMUR']"))
+            EC.presence_of_element_located((By.XPATH, f"//li[contains(@class, 'select2-results__option') and text()='{provinsi}']"))
         )
         option.click()
 
@@ -60,10 +104,88 @@ def scrape_kpu_data():
         time.sleep(5)
 
         # Tentukan folder utama
-        folder_path = "Data Kepala Daerah"
+        folder_path = f"Data Kepala Daerah {jenis_pemilihan} {provinsi} "
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)  # Membuat folder jika belum ada
 
+
+        # Temukan semua elemen modal
+        modals = driver.find_elements(By.CLASS_NAME, 'modal.fade')
+        
+        for index, modal in enumerate(modals):
+            # Ambil HTML dari elemen modal
+            modal_html = modal.get_attribute('innerHTML')
+            soup = BeautifulSoup(modal_html, 'html.parser')
+
+            # Ekstrak nama dari modal
+            name_element = soup.find('h4')  # Asumsi nama berada dalam elemen h4
+            name = name_element.get_text(strip=True) if name_element else "Unknown Name"
+
+            # Ekstrak dan simpan data profil untuk setiap modal
+            # Ekstrak dan simpan data profil untuk setiap modal
+            profile_data = extract_profile_data(soup)
+            
+            # Create a list of field names and values
+            fields = list(profile_data.keys())
+            values = list(profile_data.values())
+
+            # Beri nilai default untuk nomor
+            nomor = 1  # Nilai default jika tidak memenuhi kondisi di bawah
+            
+            # Tentukan nomor berdasarkan index
+            if index == 0:
+                nomor = 1
+            elif index == 1:
+                nomor = 1
+            elif index == 2:
+                nomor = 2
+            elif index == 3:
+                nomor = 2                
+            elif index == 4:
+                nomor = 3
+            elif index == 5:
+                nomor = 3
+            index + 1
+            
+            subfolder_path = os.path.join(folder_path, f"Nomor {nomor}")  # Nomor mulai dari 1
+            if not os.path.exists(subfolder_path):
+                os.makedirs(subfolder_path)  # Membuat folder untuk calon jika belum ada
+                
+            # Tentukan nama file CSV dengan format yang diinginkan
+            filename = os.path.join(subfolder_path,f'profile {name}.csv')
+            # Save to CSV with fields as columns
+            with open(filename, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.writer(f)
+                writer.writerow(fields)  # Write header with field names
+                writer.writerow(values)  # Write values in the next row
+
+            # Ekstrak dan simpan data tabel untuk setiap modal
+            table_titles = [
+                'Riwayat Pendidikan',
+                'Riwayat Kursus/Diklat',
+                'Riwayat Organisasi',
+                'Riwayat Tanda Penghargaan',
+                'Riwayat Publikasi'
+            ]
+            
+            for title in table_titles:
+                data = extract_table_data(soup, title)
+                if data:
+                    filename = os.path.join(subfolder_path, f"{title.lower().replace('/', '_').replace(' ', '_')}_{name}.csv")
+                    with open(filename, 'w', newline='', encoding='utf-8') as f:
+                        writer = csv.writer(f)
+                        # Add the name only once in the header row
+                        writer.writerow(['Nama'] + [column for column in data[0]])  # Header with 'Nama'
+                        
+                        # Add the name only for the first data row
+                        for i, row in enumerate(data):
+                            if i == 0:  # For the first row, include the name
+                                writer.writerow([name] + row)  # Add name as the first column in the first row
+                            else:  # For subsequent rows, do not include the name
+                                writer.writerow([''] + row)  # Leave the name field empty
+
+        
+        
         visi_misi_elements = driver.find_elements(By.CLASS_NAME, 'visi-misi')
         party_elements = driver.find_elements(By.CLASS_NAME, 'party')
 
@@ -95,7 +217,7 @@ def scrape_kpu_data():
                 os.makedirs(subfolder_path)  # Membuat folder untuk calon jika belum ada
                 
             # Tentukan nama file CSV dengan format yang diinginkan
-            filename = os.path.join(subfolder_path, f"visi misi dan nama partai calon{index + 1}.csv")
+            filename = os.path.join(subfolder_path, f"visi misi dan nama partai.csv")
             
             # Menyimpan file CSV
             with open(filename, 'w', newline='', encoding='utf-8') as file:
@@ -260,7 +382,7 @@ def scrape_kpu_data():
         
             # Simpan data kampanye ke CSV
             if kampanye_data:
-                filename = os.path.join(subfolder_path, f"TOTAL LAPORAN DANA KAMPANYE CALON {index + 1}.csv")
+                filename = os.path.join(subfolder_path, f"TOTAL LAPORAN DANA KAMPANYE.csv")
                 with open(filename, 'w', newline='', encoding='utf-8') as file:
                     writer = csv.writer(file)
                     writer.writerow(["Uraian", "LADK", "LPSDK", "LPPDK"])  # Header sesuai kolom tabel
@@ -301,7 +423,7 @@ def scrape_kpu_data():
                     row.append('')
             
             # Simpan data ke CSV
-            csv_file = os.path.join(subfolder_path,f"DETAIL LAPORAN DANA KAMPANYE DALAM BENTUK UANG CALON {index + 1}.csv")
+            csv_file = os.path.join(subfolder_path,f"DETAIL LAPORAN DANA KAMPANYE DALAM BENTUK UANG.csv")
             with open(csv_file, "w", newline="", encoding="utf-8") as file:
                 writer = csv.writer(file)
                 writer.writerow(headers)  # Tulis header
@@ -342,7 +464,7 @@ def scrape_kpu_data():
                         row.append('')
             
                 # Simpan data ke CSV untuk Tabel Barang
-                csv_file_barang = os.path.join(subfolder_path,f"DETAIL LAPORAN DANA KAMPANYE DALAM BENTUK BARANG calon{index + 1}.csv")
+                csv_file_barang = os.path.join(subfolder_path,f"DETAIL LAPORAN DANA KAMPANYE DALAM BENTUK BARANG.csv")
                 with open(csv_file_barang, "w", newline="", encoding="utf-8") as file:
                     writer = csv.writer(file)
                     writer.writerow(headers_barang)  # Tulis header
@@ -421,7 +543,7 @@ def scrape_kpu_data():
             
             # Simpan data ke CSV
             if data:
-                filename = os.path.join(subfolder_path,f"LAPORAN HARIAN Calon {index + 1}.csv")
+                filename = os.path.join(subfolder_path,f"LAPORAN HARIAN.csv")
                 with open(filename, 'w', newline='', encoding='utf-8') as file:
                     writer = csv.writer(file)
                     writer.writerow(["Tanggal", "Bentuk", "Uang(Rp)", "Barang(Rp)", "Jasa(Rp)", "Total(Rp)"])  # Header sesuai kolom tabel
@@ -474,7 +596,7 @@ def scrape_kpu_data():
             driver.execute_script("window.scrollBy(0, window.innerHeight / 1);")
             time.sleep(5)
 
-    
+   
     
 
     except Exception as e:
