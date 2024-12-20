@@ -366,7 +366,7 @@ def scrape_kpu_data():
             dana_kampanye_buttons.click()
 
             # Tunggu hingga halaman kampanye dimuat
-            time.sleep(5)
+            time.sleep(20)
             
             # Debug: Scrape data dari halaman tujuan
             print(f"Scraping data dari tombol kampanye ke-{index + 1}")
