@@ -568,7 +568,7 @@ def scrape_kpu_data():
             )
             time.sleep(5)
             jenis_pemilihan_select.click()
-            driver.find_element(By.XPATH, "//option[@value='Gubernur']").click()
+            driver.find_element(By.XPATH, f"//option[@value='{jenis_pemilihan}']").click()
 
             wilayah_select = WebDriverWait(driver, 15).until(
                 EC.element_to_be_clickable((By.XPATH, "//span[@id='select2-wilayah-container']"))
