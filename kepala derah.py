@@ -11,10 +11,6 @@ import traceback
 import re
 import os
 
-def bersihkan_data(tabel):
-    """Membersihkan data tabel dengan menghapus elemen kosong."""
-    return [row for row in tabel if any(cell.strip() for cell in row)]
-
 def extract_profile_data(soup):
     """Ekstrak data profil dari HTML."""
     profile_data = {}
@@ -29,8 +25,17 @@ def extract_profile_data(soup):
     
     # Ekstrak pekerjaan
     pekerjaan = soup.find('ul', class_='text-left')
-    if pekerjaan:
+    if pekerjaan and pekerjaan.find('li'):
         profile_data['Pekerjaan'] = pekerjaan.find('li').text.strip()
+    
+    # Ekstrak status hukum
+    status_hukum_section = soup.find_all('div', class_='row')[3]  # Section containing status hukum
+    if status_hukum_section:
+        status_hukum_ul = status_hukum_section.find('ul', class_='text-left')
+        if status_hukum_ul and status_hukum_ul.find('li'):
+            profile_data['Status Hukum'] = status_hukum_ul.find('li').text.strip()
+        else:
+            profile_data['Status Hukum'] = 'Data tidak ada'
     
     return profile_data
 
@@ -51,7 +56,6 @@ def extract_table_data(soup, table_title):
             
             return rows
     return []
-
 def scrape_kpu_data():
     # Konfigurasi Chrome WebDriver
     options = webdriver.ChromeOptions()
