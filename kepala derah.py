@@ -18,7 +18,7 @@ def bersihkan_data(tabel):
 def extract_profile_data(soup):
     """Ekstrak data profil dari HTML."""
     profile_data = {}
-    profile_data['nama'] = soup.find('h4').text.strip()
+    profile_data['nama'] = soup.find('h4').text.strip()  # Assuming name is in h4 tag
     
     # Ekstrak informasi dasar
     rows = soup.find_all('div', class_='row')[1].find_all('p')
@@ -64,8 +64,8 @@ def scrape_kpu_data():
     driver = webdriver.Chrome(service=service, options=options)
 
     try:
-        jenis_pemilihan = "Gubernur"
-        provinsi = "PROVINSI JAWA TIMUR"
+        jenis_pemilihan = "Walikota"
+        provinsi = "KOTA PROBOLINGGO"
         # Buka halaman web
         driver.get('https://infopemilu.kpu.go.id/Pemilihan/Pasangan_calon')
 
@@ -107,52 +107,41 @@ def scrape_kpu_data():
         folder_path = f"Data Kepala Daerah {jenis_pemilihan} {provinsi} "
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)  # Membuat folder jika belum ada
+        WebDriverWait(driver, 15).until(
+            EC.presence_of_element_located((By.CLASS_NAME, 'modal.fade'))
+        )
 
+        # Dapatkan HTML dari seluruh halaman
+        page_source = driver.page_source
+        soup = BeautifulSoup(page_source, 'html.parser')
 
         # Temukan semua elemen modal
         modals = driver.find_elements(By.CLASS_NAME, 'modal.fade')
-        
+
         for index, modal in enumerate(modals):
-            # Ambil HTML dari elemen modal
-            modal_html = modal.get_attribute('innerHTML')
-            soup = BeautifulSoup(modal_html, 'html.parser')
+            # Ekstrak HTML dari modal
+            modal_soup = BeautifulSoup(modal.get_attribute('outerHTML'), 'html.parser')
 
             # Ekstrak nama dari modal
-            name_element = soup.find('h4')  # Asumsi nama berada dalam elemen h4
-            name = name_element.get_text(strip=True) if name_element else "Unknown Name"
+            name_element = modal_soup.find('h4')  # Adjust tag if name is elsewhere
+            name = name_element.get_text(strip=True) if name_element else f"Unknown Name {index}"
 
             # Ekstrak dan simpan data profil untuk setiap modal
-            # Ekstrak dan simpan data profil untuk setiap modal
-            profile_data = extract_profile_data(soup)
+            profile_data = extract_profile_data(modal_soup)
             
             # Create a list of field names and values
             fields = list(profile_data.keys())
             values = list(profile_data.values())
 
-            # Beri nilai default untuk nomor
-            nomor = 1  # Nilai default jika tidak memenuhi kondisi di bawah
-            
             # Tentukan nomor berdasarkan index
-            if index == 0:
-                nomor = 1
-            elif index == 1:
-                nomor = 1
-            elif index == 2:
-                nomor = 2
-            elif index == 3:
-                nomor = 2                
-            elif index == 4:
-                nomor = 3
-            elif index == 5:
-                nomor = 3
-            index + 1
+            nomor = (index // 2) + 1  # Adjust numbering logic based on your requirement
             
             subfolder_path = os.path.join(folder_path, f"Nomor {nomor}")  # Nomor mulai dari 1
             if not os.path.exists(subfolder_path):
                 os.makedirs(subfolder_path)  # Membuat folder untuk calon jika belum ada
                 
             # Tentukan nama file CSV dengan format yang diinginkan
-            filename = os.path.join(subfolder_path,f'profile {name}.csv')
+            filename = os.path.join(subfolder_path, f'profile_{name}.csv')
             # Save to CSV with fields as columns
             with open(filename, 'w', newline='', encoding='utf-8') as f:
                 writer = csv.writer(f)
@@ -169,7 +158,7 @@ def scrape_kpu_data():
             ]
             
             for title in table_titles:
-                data = extract_table_data(soup, title)
+                data = extract_table_data(modal_soup, title)
                 if data:
                     filename = os.path.join(subfolder_path, f"{title.lower().replace('/', '_').replace(' ', '_')}_{name}.csv")
                     with open(filename, 'w', newline='', encoding='utf-8') as f:
@@ -211,6 +200,7 @@ def scrape_kpu_data():
 
         # Simpan data setiap elemen ke file CSV terpisah dalam folder masing-masing
         for index, data in enumerate(data_elements):
+            
             # Tentukan folder untuk calon tertentu, sesuai dengan nomor calon
             subfolder_path = os.path.join(folder_path, f"Nomor {index + 1}")  # Nomor mulai dari 1
             if not os.path.exists(subfolder_path):
@@ -231,6 +221,11 @@ def scrape_kpu_data():
         print(f"Jumlah tombol kampanye ditemukan: {len(kampanye_buttons)}")
 
         for index in range(len(kampanye_buttons)):
+            if index == 3:
+                driver.execute_script("window.scrollBy(0, window.innerHeight / 1);")
+                time.sleep(3)
+                driver.execute_script("window.scrollBy(0, window.innerHeight / 2);")
+                time.sleep(5)
             # Refresh elemen tombol (karena DOM berubah setelah navigasi kembali)
             kampanye_buttons = driver.find_elements(By.XPATH, "//form[@action='Pasangan_calon/kampanye']//button[@type='submit']")
             kampanye_button = kampanye_buttons[index]
@@ -357,6 +352,11 @@ def scrape_kpu_data():
 
         for index in range(len(dana_kampanye_buttons)):
             # Refresh elemen tombol (karena DOM berubah setelah navigasi kembali)
+            if index == 3:
+                driver.execute_script("window.scrollBy(0, window.innerHeight / 1);")
+                time.sleep(3)
+                driver.execute_script("window.scrollBy(0, window.innerHeight / 2);")
+                time.sleep(5)
             dana_kampanye_buttons = driver.find_elements(By.XPATH, "//form[@action='Pasangan_calon/dana_kampanye']//button[@type='submit']")
             dana_kampanye_buttons = dana_kampanye_buttons[index]
             subfolder_path = os.path.join(folder_path, f"Nomor {index + 1}")  # Nomor mulai dari 1
