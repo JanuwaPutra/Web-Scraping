@@ -128,7 +128,7 @@ def scrape_kpu_data():
 
             # Ekstrak nama dari modal
             name_element = modal_soup.find('h4')  # Adjust tag if name is elsewhere
-            name = name_element.get_text(strip=True) if name_element else f"Unknown Name {index}"
+            name = name_element.get_text(strip=True) if name_element else f"Data Tidak Ada {index}"
 
             # Ekstrak dan simpan data profil untuk setiap modal
             profile_data = extract_profile_data(modal_soup)
@@ -164,20 +164,18 @@ def scrape_kpu_data():
             for title in table_titles:
                 data = extract_table_data(modal_soup, title)
                 if data:
-                    filename = os.path.join(subfolder_path, f"{title.lower().replace('/', '_').replace(' ', '_')}_{name}.csv")
+                    filename = os.path.join(subfolder_path, f"{title.lower().replace('/', '_').replace(' ', '_')} {name}.csv")
                     with open(filename, 'w', newline='', encoding='utf-8') as f:
                         writer = csv.writer(f)
                         # Add the name only once in the header row
                         writer.writerow(['Nama'] + [column for column in data[0]])  # Header with 'Nama'
-                        
+                        print( f"{title.lower().replace('/', '_').replace(' ', '_')} {name}.csv Sudah Terscraping")
                         # Add the name only for the first data row
                         for i, row in enumerate(data):
                             if i == 0:  # For the first row, include the name
                                 writer.writerow([name] + row)  # Add name as the first column in the first row
                             else:  # For subsequent rows, do not include the name
                                 writer.writerow([''] + row)  # Leave the name field empty
-
-        
         
         visi_misi_elements = driver.find_elements(By.CLASS_NAME, 'visi-misi')
         party_elements = driver.find_elements(By.CLASS_NAME, 'party')
@@ -211,14 +209,14 @@ def scrape_kpu_data():
                 os.makedirs(subfolder_path)  # Membuat folder untuk calon jika belum ada
                 
             # Tentukan nama file CSV dengan format yang diinginkan
-            filename = os.path.join(subfolder_path, f"visi misi dan nama partai.csv")
+            filename = os.path.join(subfolder_path, f"Visi Misi dan Nama Partai.csv")
             
             # Menyimpan file CSV
             with open(filename, 'w', newline='', encoding='utf-8') as file:
                 writer = csv.DictWriter(file, fieldnames=['Visi', 'Misi', 'Partai'])
                 writer.writeheader()
                 writer.writerows([data])  # data adalah sebuah dictionary untuk satu calon
-            print(f"Data elemen {index + 1} berhasil disimpan ke {filename}")
+            print(f"{filename} Calon Visi Misi dan Partai Calon {index + 1} Sudah Terscrapping")
 
         # Ambil semua tombol kampanye di halaman awal
         kampanye_buttons = driver.find_elements(By.XPATH, "//form[@action='Pasangan_calon/kampanye']//button[@type='submit']")
@@ -262,7 +260,7 @@ def scrape_kpu_data():
                     kampanye_data.append([col.text for col in cols])
     
                 # Simpan ke CSV Laporan Kampanye dengan nama yang berbeda berdasarkan index
-                with open(os.path.join(subfolder_path, f"laporan kampanye calon{index + 1}.csv"), "w", newline="", encoding="utf-8") as file:
+                with open(os.path.join(subfolder_path, f"Laporan Kampanye Calon.csv"), "w", newline="", encoding="utf-8") as file:
                     writer = csv.writer(file)
                     writer.writerow(["Tanggal", "Metode", "Tempat", "Kegiatan", "Jumlah Peserta", "Status Pelaksanaan"])
                     writer.writerows(kampanye_data)
@@ -297,7 +295,7 @@ def scrape_kpu_data():
                     apk_data.append(row_data)
             
                 # Simpan ke CSV Laporan APK dengan nama yang berbeda berdasarkan index
-                with open(os.path.join(subfolder_path, f"laporan_apk_calon_{index + 1}.csv"), "w", newline="", encoding="utf-8") as file:
+                with open(os.path.join(subfolder_path, f"laporan apk.csv"), "w", newline="", encoding="utf-8") as file:
                     writer = csv.writer(file)
                     writer.writerow(["Tanggal pemasangan", "Jenis APK", "Jumlah Pemasangan", "Alamat Pemasangan", "Provinsi Pemasangan", "Kabupaten Pemasangan", "Koordinat"])
                     writer.writerows(apk_data)
@@ -392,9 +390,6 @@ def scrape_kpu_data():
                     writer.writerow(["Uraian", "LADK", "LPSDK", "LPPDK"])  # Header sesuai kolom tabel
                     writer.writerows(kampanye_data)
                 print(f"Data laporan kampanye {index + 1} berhasil disimpan ke {filename}")
-
-        
-        # Inside the dana_kampanye_buttons loop, after clicking the button:
         
             # Temukan elemen tabel
             table_uang = driver.find_element(By.CSS_SELECTOR, "div#bentuk_uang table")
@@ -427,7 +422,7 @@ def scrape_kpu_data():
                     row.append('')
             
             # Simpan data ke CSV
-            csv_file = os.path.join(subfolder_path,f"DETAIL LAPORAN DANA KAMPANYE DALAM BENTUK UANG.csv")
+            csv_file = os.path.join(subfolder_path,f"Detail Laporan Dana Kampanye Dalam Bentuk Uang.csv")
             with open(csv_file, "w", newline="", encoding="utf-8") as file:
                 writer = csv.writer(file)
                 writer.writerow(headers)  # Tulis header
@@ -468,7 +463,7 @@ def scrape_kpu_data():
                         row.append('')
             
                 # Simpan data ke CSV untuk Tabel Barang
-                csv_file_barang = os.path.join(subfolder_path,f"DETAIL LAPORAN DANA KAMPANYE DALAM BENTUK BARANG.csv")
+                csv_file_barang = os.path.join(subfolder_path,f"Detail Laporan Dana Kampanye Dalam Bentuk Barang.csv")
                 with open(csv_file_barang, "w", newline="", encoding="utf-8") as file:
                     writer = csv.writer(file)
                     writer.writerow(headers_barang)  # Tulis header
@@ -510,7 +505,7 @@ def scrape_kpu_data():
                         row.append('')
             
                 # Simpan data ke CSV untuk Tabel Jasa
-                csv_file_jasa = os.path.join(subfolder_path,f"DETAIL LAPORAN DANA KAMPANYE DALAM BENTUK JASA Calon {index + 1}.csv")
+                csv_file_jasa = os.path.join(subfolder_path,f"Detail Laporan Dana Kampanye Dalam Bentuk Jasa.csv")
                 with open(csv_file_jasa, "w", newline="", encoding="utf-8") as file:
                     writer = csv.writer(file)
                     writer.writerow(headers_jasa)  # Tulis header
@@ -556,15 +551,12 @@ def scrape_kpu_data():
             else:
                 print("Tidak ada data untuk disimpan.")
 
-
-
             # Kembali ke halaman awal dengan driver.get
             driver.get('https://infopemilu.kpu.go.id/Pemilihan/Pasangan_calon')
 
             # Tunggu hingga halaman awal dimuat
             WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.ID, 'filter-btn')))
             print("Kembali ke halaman awal.")
-
 
             # Pilih ulang jenis pemilihan dan wilayah
             jenis_pemilihan_select = WebDriverWait(driver, 15).until(
@@ -599,9 +591,6 @@ def scrape_kpu_data():
             time.sleep(5)
             driver.execute_script("window.scrollBy(0, window.innerHeight / 1);")
             time.sleep(5)
-
-   
-    
 
     except Exception as e:
         print(f"Terjadi kesalahan: {e}")
