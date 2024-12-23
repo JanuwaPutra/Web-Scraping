@@ -225,11 +225,11 @@ def scrape_kpu_data():
         print(f"Jumlah tombol kampanye ditemukan: {len(kampanye_buttons)}")
 
         for index in range(len(kampanye_buttons)):
-            if index == 3:
+            if index == 3 or index == 4:
                 driver.execute_script("window.scrollBy(0, window.innerHeight / 1);")
-                time.sleep(3)
+                time.sleep(1)
                 driver.execute_script("window.scrollBy(0, window.innerHeight / 2);")
-                time.sleep(5)
+                time.sleep(3)
             # Refresh elemen tombol (karena DOM berubah setelah navigasi kembali)
             kampanye_buttons = driver.find_elements(By.XPATH, "//form[@action='Pasangan_calon/kampanye']//button[@type='submit']")
             kampanye_button = kampanye_buttons[index]
@@ -289,7 +289,7 @@ def scrape_kpu_data():
                         longitude = match.group(2)  # 113.677
                         coordinates = f"{latitude},{longitude}"
                     else:
-                        coordinates = "Koordinat tidak ditemukan"
+                        coordinates = "Data tidak ada."
             
                     # Buat baris data tanpa kolom iframe terakhir
                     row_data = [col.text for col in cols[:-1]]
@@ -356,11 +356,11 @@ def scrape_kpu_data():
 
         for index in range(len(dana_kampanye_buttons)):
             # Refresh elemen tombol (karena DOM berubah setelah navigasi kembali)
-            if index == 3:
+            if index == 3 or index == 4:
                 driver.execute_script("window.scrollBy(0, window.innerHeight / 1);")
-                time.sleep(3)
+                time.sleep(1)
                 driver.execute_script("window.scrollBy(0, window.innerHeight / 2);")
-                time.sleep(5)
+                time.sleep(3)
             dana_kampanye_buttons = driver.find_elements(By.XPATH, "//form[@action='Pasangan_calon/dana_kampanye']//button[@type='submit']")
             dana_kampanye_buttons = dana_kampanye_buttons[index]
             subfolder_path = os.path.join(folder_path, f"Nomor {index + 1}")  # Nomor mulai dari 1
