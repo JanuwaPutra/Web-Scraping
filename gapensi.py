@@ -91,7 +91,7 @@ def get_table_data(driver):
                         'nama_badan_usaha': details.get('Nama Badan Usaha', ''),
                         'nama_pimpinan_detail': details.get('Nama Pimpinan', ''),
                         'nomor_sertifikat': details.get('Nomor Sertifikat', ''),
-                        'kualifikasi_detail': details.get('Kualifikasi', ''),
+                        'kualifikasi': details.get('Kualifikasi', ''),
                         'tgl_kta': details.get('Tgl KTA', ''),
                         'email': details.get('Email', ''),
                         'alamat': details.get('Alamat', ''),
@@ -141,7 +141,7 @@ def save_to_csv(data, filename):
 
 def main():
     driver = setup_driver()
-    base_url = "https://gapensi.or.id/anggota?limit=50&keyword=&idkual=&subkla=&kab=&char=&tahun=2024&provinsi=35&page=1"
+    base_url = "https://gapensi.or.id/anggota?tahun=2024&provinsi=35&kab=&idkual=SK&keyword="
     all_companies = []
     page = 1
     
