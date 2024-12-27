@@ -62,7 +62,7 @@ def pilih_dapil_aceh_1(current_page=1):
             for button in pagination_buttons:
                 if button.text == str(current_page):
                     button.click()
-                    time.sleep(10)  # Tunggu halaman memuat
+                    time.sleep(20)  # Tunggu halaman memuat
                     break
 
     except Exception as e:
@@ -78,7 +78,7 @@ try:
     current_page = 1
     pilih_dapil_aceh_1(current_page)
 
-    processed_kandidat = 99
+    processed_kandidat = 100
     max_kandidat = float('inf')  # Scraping semua kandidat
 
     while processed_kandidat < max_kandidat:
