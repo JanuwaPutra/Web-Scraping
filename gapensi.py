@@ -141,7 +141,7 @@ def save_to_csv(data, filename):
 
 def main():
     driver = setup_driver()
-    base_url = "https://gapensi.or.id/anggota?tahun=2024&provinsi=35&kab=&idkual=SK&keyword="
+    base_url = "https://gapensi.or.id/anggota?limit=50&keyword=&idkual=&subkla=&kab=&char=&tahun=2024&provinsi=35&page=1"
     all_companies = []
     page = 1
     
