@@ -25,6 +25,9 @@ os.makedirs(output_folder, exist_ok=True)
 
 # Menelusuri semua folder dan subfolder untuk mencari file CSV
 for root, dirs, files in os.walk(input_folder):
+    # Nama folder kecamatan
+    kecamatan_folder_name = os.path.basename(root)
+    
     for file_name in files:
         if file_name.endswith(".csv"):  # Hanya memproses file CSV
             input_csv = os.path.join(root, file_name)
@@ -78,13 +81,16 @@ for root, dirs, files in os.walk(input_folder):
                         row_data.append(link_url)
                         rows.append(row_data)
 
-                    # Membuat folder berdasarkan nama CSV dari folder input di dalam folder output
-                    # Nama folder berdasarkan nama file CSV (misalnya KAB. BOMBANA_DATA)
-                    kecamatan_folder = os.path.join(output_folder, f"{file_name.replace('.csv', '').replace(' ', '_')}_DATA")
-                    os.makedirs(kecamatan_folder, exist_ok=True)
+                    # Membuat folder berdasarkan nama folder kecamatan
+                    kecamatan_output_folder = os.path.join(output_folder, kecamatan_folder_name)
+                    os.makedirs(kecamatan_output_folder, exist_ok=True)
 
-                    # Menyimpan data ke CSV di dalam folder kecamatan
-                    output_csv = os.path.join(kecamatan_folder, f"{kecamatan_name.replace(' ', '_')}.csv")
+                    # Membuat subfolder berdasarkan nama file CSV
+                    file_folder = os.path.join(kecamatan_output_folder, file_name.replace('.csv', ''))
+                    os.makedirs(file_folder, exist_ok=True)
+
+                    # Menyimpan data ke CSV di dalam folder file
+                    output_csv = os.path.join(file_folder, f"{kecamatan_name.replace(' ', '_')}.csv")
                     with open(output_csv, mode="w", newline="", encoding="utf-8") as out_file:
                         writer = csv.writer(out_file)
                         writer.writerow(header_names)  # Header
