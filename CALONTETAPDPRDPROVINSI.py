@@ -28,18 +28,18 @@ def pilih_dapil_aceh_1(current_page=1):
     """Fungsi untuk memilih Dapil ACEH I dan konfigurasi entries"""
     try:
         wait = WebDriverWait(driver, 20)
-        
-        # Pilih Dapil ACEH I
-        select_element = wait.until(EC.presence_of_element_located((By.ID, "filterDapil")))
-        select = Select(select_element)
-        select.select_by_visible_text("ACEH 1")
-        time.sleep(20)
 
         # Pilih 100 entries
         entries_select = wait.until(EC.presence_of_element_located((By.NAME, "tbl_ms_nasional_length")))
         entries_dropdown = Select(entries_select)
         entries_dropdown.select_by_value("100")
         time.sleep(1)  # Tunggu halaman memuat ulang
+        
+        # Pilih Dapil JAWA BARAT 5
+        select_element = wait.until(EC.presence_of_element_located((By.ID, "filterDapil")))
+        select = Select(select_element)
+        select.select_by_visible_text("JAWA TIMUR 2")
+        time.sleep(20)
 
         # Scroll ke bawah hingga mentok
         last_height = driver.execute_script("return document.body.scrollHeight")
@@ -62,11 +62,11 @@ def pilih_dapil_aceh_1(current_page=1):
             for button in pagination_buttons:
                 if button.text == str(current_page):
                     button.click()
-                    time.sleep(20)  # Tunggu halaman memuat
+                    time.sleep(10)  # Tunggu halaman memuat
                     break
 
     except Exception as e:
-        print(f"Gagal memilih Dapil ACEH I atau konfigurasi entries: {e}")
+        print(f"Gagal memilih Dapil atau konfigurasi entries: {e}")
         raise
 
 kandidat_data = []
@@ -78,14 +78,15 @@ try:
     current_page = 1
     pilih_dapil_aceh_1(current_page)
 
-    processed_kandidat = 100
-    max_kandidat = float('inf')  # Scraping semua kandidat
-
+    processed_kandidat = 0
+    max_kandidat = 95
+    
     while processed_kandidat < max_kandidat:
         try:
             rows = driver.find_elements(By.CSS_SELECTOR, "tr.odd, tr.even")
-            if processed_kandidat >= len(rows):
-                # Cari tombol Next
+            
+            # Jika kandidat yang diproses sudah mencapai 100, klik tombol Next
+            if processed_kandidat >= 100:
                 try:
                     next_button = WebDriverWait(driver, 10).until(
                         EC.element_to_be_clickable((By.ID, "tbl_ms_nasional_next"))
@@ -97,8 +98,7 @@ try:
                         current_page += 1  # Increment halaman
                         time.sleep(13)  # Tunggu halaman memuat
                         
-                        # Setelah klik Next, update rows
-                        rows = driver.find_elements(By.CSS_SELECTOR, "tr.odd, tr.even")
+
                         processed_kandidat = 0
                     else:
                         # Jika tombol Next disabled, berarti sudah halaman terakhir
@@ -118,7 +118,9 @@ try:
                     data = {}
                     
                     # [Salin seluruh blok scraping data kandidat dari script sebelumnya]
-                    # ... [paste your entire data scraping code here] ...
+                    # ... [paste your entire data scraping code here, just like in the previous script] ...
+
+                    # ... [Rest of the scraping code remains the same] ...
 
                     try:
                                 # Scrap data utama dari tabel
@@ -373,11 +375,11 @@ finally:
         fieldnames = list(fieldnames)
 
         # Simpan ke CSV
-        with open('ACEH I.csv', 'w', newline='', encoding='utf-8') as file:
+        with open('JAWA TIMUR 2.csv', 'w', newline='', encoding='utf-8') as file:
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(kandidat_data)
-        print("Data kandidat telah disimpan di ACEH I.csv")
+        print("Data kandidat telah disimpan di csv")
     except Exception as e:
         print(f"Gagal menyimpan CSV: {e}")
 
