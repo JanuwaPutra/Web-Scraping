@@ -20,7 +20,7 @@ def get_company_detail(driver, company_link):
     try:
         # Klik link untuk membuka modal
         driver.execute_script("arguments[0].click();", company_link)
-        time.sleep(2)
+        time.sleep(1)
         
         # Tunggu modal muncul dan semua elemennya ter-load
         WebDriverWait(driver, 10).until(
@@ -80,7 +80,7 @@ def get_table_data(driver):
                     'no': row.find_element(By.XPATH, ".//th[@scope='row']").text,
                     'nama_perusahaan': company_link.text,
                     'pimpinan': row.find_elements(By.XPATH, ".//td[contains(@class, 'u-txt--uppercase')]")[1].text,
-                    'no_registrasi': row.find_element(By.XPATH, ".//td[not(contains(@class, 'u-txt--center'))][2]").text,
+                    'no_registrasi': row.find_element(By.XPATH, ".//td[not(contains(@class, 'u-txt--center')) and not(contains(@class, 'u-txt--uppercase'))]").text.strip(),
                     'kualifikasi': row.find_element(By.XPATH, ".//td[contains(@class, 'u-txt--center')]").text
                 }
                 
@@ -91,7 +91,7 @@ def get_table_data(driver):
                         'nama_badan_usaha': details.get('Nama Badan Usaha', ''),
                         'nama_pimpinan_detail': details.get('Nama Pimpinan', ''),
                         'nomor_sertifikat': details.get('Nomor Sertifikat', ''),
-                        'kualifikasi': details.get('Kualifikasi', ''),
+                        'kualifikasi_detail': details.get('Kualifikasi', ''),
                         'tgl_kta': details.get('Tgl KTA', ''),
                         'email': details.get('Email', ''),
                         'alamat': details.get('Alamat', ''),
@@ -111,6 +111,7 @@ def get_table_data(driver):
     except Exception as e:
         print(f"Error in get_table_data: {str(e)}")
         return []
+
 
 def save_to_csv(data, filename):
     with open(filename, 'w', newline='', encoding='utf-8') as f:
@@ -141,7 +142,7 @@ def save_to_csv(data, filename):
 
 def main():
     driver = setup_driver()
-    base_url = "https://gapensi.or.id/anggota?tahun=2024&provinsi=35&kab=&idkual=SK&keyword="
+    base_url = "https://gapensi.or.id/anggota?limit=50&keyword=&idkual=&subkla=&kab=&char=&tahun=2018&provinsi=35&page=1"
     all_companies = []
     page = 1
     
@@ -152,7 +153,7 @@ def main():
             driver.get(url)
             
             # Tunggu halaman dimuat
-            time.sleep(3)
+            time.sleep(1)
             
             # Ambil data dari tabel
             companies = get_table_data(driver)
@@ -165,7 +166,7 @@ def main():
             # Cek halaman selanjutnya
             try:
                 next_buttons = driver.find_elements(By.XPATH, "//a[contains(@href, 'page=') and not(contains(@class, 'active'))]")
-                if not next_buttons or page >= 31:  # Batasi sampai halaman 31 sesuai pagination
+                if not next_buttons or page >= 63:  # Batasi sampai halaman 31 sesuai pagination
                     break
                 page += 1
             except NoSuchElementException:
@@ -178,7 +179,7 @@ def main():
         
     # Simpan data ke CSV
     if all_companies:
-        save_to_csv(all_companies, 'gapensi_data.csv')
+        save_to_csv(all_companies, 'tes.csv')
         print(f"\nScraping selesai! {len(all_companies)} perusahaan telah disimpan ke gapensi_data.csv")
     else:
         print("Tidak ada data yang berhasil di-scrape")
