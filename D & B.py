@@ -39,12 +39,21 @@ class DNBScraper:
 
             # Get address
             try:
+                # Try to locate address inside <a>
                 address_elem = self.wait.until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, 'span.company_data_point[name="company_address"] a'))
                 )
                 details['address'] = address_elem.text.strip()
             except TimeoutException:
-                details['address'] = ''
+                try:
+                    # Fallback to address without <a>
+                    address_elem = self.wait.until(
+                        EC.presence_of_element_located((By.CSS_SELECTOR, 'span.company_data_point[name="company_address"] span'))
+                    )
+                    details['address'] = address_elem.text.strip()
+                except TimeoutException:
+                    details['address'] = ''
+
 
             # Get contacts
             contacts = []
@@ -174,7 +183,7 @@ class DNBScraper:
             print(f"Error scraping companies: {e}")
             return all_companies
 
-    def save_to_csv(self, companies, filename='hasilscrap.csv'):
+    def save_to_csv(self, companies, filename='Highway, Street, and Bridge Construction.csv'):
         if not companies:
             print("No data to save")
             return
@@ -183,9 +192,7 @@ class DNBScraper:
         for company in companies:
             company_data = {
                 'name': company['name'],
-                'location': company['location'],
                 'address': company['address'],
-                'original_href': company['url'],
                 'full_url': company['full_url']
             }
             
@@ -206,7 +213,7 @@ class DNBScraper:
 
 # Usage example
 if __name__ == "__main__":
-    url = "https://www.dnb.com/business-directory/company-information.chemical_manufacturing.id.html"
+    url = "https://www.dnb.com/business-directory/company-information.highway_street_and_bridge_construction.id.jawa_timur.html"
     
     try:
         scraper = DNBScraper()
