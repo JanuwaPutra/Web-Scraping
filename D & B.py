@@ -37,22 +37,27 @@ class DNBScraper:
 
             details = {}
 
+
             # Get address
             try:
-                # Try to locate address inside <a>
+                # Prioritas: alamat dalam <a> jika ada
                 address_elem = self.wait.until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, 'span.company_data_point[name="company_address"] a'))
                 )
                 details['address'] = address_elem.text.strip()
             except TimeoutException:
                 try:
-                    # Fallback to address without <a>
+                    # Fallback: alamat dalam <span> tanpa <a>
                     address_elem = self.wait.until(
-                        EC.presence_of_element_located((By.CSS_SELECTOR, 'span.company_data_point[name="company_address"] span'))
+                        EC.presence_of_element_located((By.CSS_SELECTOR, 'span.company_data_point[name="company_address"] > span'))
                     )
-                    details['address'] = address_elem.text.strip()
+                    # Abaikan teks yang mengandung "See other locations"
+                    full_text = address_elem.text.strip()
+                    address_text = full_text.split("\n")[0]  # Ambil hanya baris pertama jika ada teks tambahan
+                    details['address'] = address_text
                 except TimeoutException:
                     details['address'] = ''
+
 
 
             # Get contacts
@@ -183,7 +188,7 @@ class DNBScraper:
             print(f"Error scraping companies: {e}")
             return all_companies
 
-    def save_to_csv(self, companies, filename='Highway, Street, and Bridge Construction.csv'):
+    def save_to_csv(self, companies, filename='Utilities.csv'):
         if not companies:
             print("No data to save")
             return
@@ -208,12 +213,12 @@ class DNBScraper:
         print(f"\nData saved to {filename}")
         print(f"Total companies scraped: {len(flattened_data)}")
 
-    def close(self):
+    def close(self):    
         self.driver.quit()
 
 # Usage example
 if __name__ == "__main__":
-    url = "https://www.dnb.com/business-directory/company-information.highway_street_and_bridge_construction.id.jawa_timur.html"
+    url = "https://www.dnb.com/business-directory/company-information.utilities.id.jawa_timur.html"
     
     try:
         scraper = DNBScraper()
