@@ -32,9 +32,6 @@ def save_image(url, kelurahan, tps, save_path):
     else:
         print("Gambar gagal disimpan:", file_path)
 
-
-
-
 # ? Get image url
 def get_image_urls():
     elements = driver.find_elements(By.XPATH, '//div[@class="col-md-4"]')
@@ -75,7 +72,7 @@ def click_and_input_tps(option):
     input_element.send_keys(option)
     input_element.send_keys(Keys.RETURN)
     
-    time.sleep(1)
+    time.sleep(3)
 
 def click_and_input_kelurahan(option):
     input_element = driver.find_element(By.XPATH, '(//input[@class="vs__search"])[6]')
@@ -87,15 +84,15 @@ def click_and_input_kelurahan(option):
     time.sleep(1)
 
 if __name__ == "__main__":
-    starting_url= "https://pemilu2024.kpu.go.id/pilpres/hitung-suara/31/3101/310102"
+    starting_url= "https://pemilu2024.kpu.go.id/pilpres/hitung-suara/35/3526/352605"
     driver = webdriver.Chrome()
     driver.get(starting_url)
 
     #! PROVINSI-KABUPATEN-KECAMATAN-KELURAHAN-TPS 000
     
-    provinsi = "JAKARTA"
-    kabupaten = "ADM. KEP. SERIBU"
-    kecamatan = "KEPULAUAN SERIBU SELATAN"
+    provinsi = "JAWA TIMUR"
+    kabupaten = "BANGKALAN"
+    kecamatan = "AROSBAYA"
     
     possible_kelurahan = get_dropdown_option_kelurahan()
     
