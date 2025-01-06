@@ -12,6 +12,9 @@ from selenium.webdriver.support import expected_conditions as EC
 
 # ? Save Image
     # Buat folder Kelurahan
+# ? Save Image
+def save_image(url, kelurahan, tps, save_path):
+    # Buat folder Kelurahan
     kelurahan_folder = os.path.join("hasil", kelurahan)
     # Buat subfolder TPS di dalam folder Kelurahan
     tps_folder = os.path.join(kelurahan_folder, tps)
@@ -28,6 +31,7 @@ from selenium.webdriver.support import expected_conditions as EC
             print("Gambar Berhasil disimpan:", file_path)
     else:
         print("Gambar gagal disimpan:", file_path)
+
 
 
 
