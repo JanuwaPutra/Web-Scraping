@@ -38,7 +38,7 @@ def pilih_dapil_aceh_1(current_page=1):
         # Pilih Dapil JAWA BARAT 5
         select_element = wait.until(EC.presence_of_element_located((By.ID, "filterDapil")))
         select = Select(select_element)
-        select.select_by_visible_text("JAWA TIMUR 2")
+        select.select_by_visible_text("ACEH TENGGARA 2")
         time.sleep(20)
 
         # Scroll ke bawah hingga mentok
@@ -72,14 +72,14 @@ def pilih_dapil_aceh_1(current_page=1):
 kandidat_data = []
 
 try:
-    driver.get("https://infopemilu.kpu.go.id/Pemilu/Dct_dprprov")
+    driver.get("https://infopemilu.kpu.go.id/Pemilu/Dct_dprd")
     
     # Mulai dari halaman pertama
     current_page = 1
     pilih_dapil_aceh_1(current_page)
 
     processed_kandidat = 0
-    max_kandidat = 95
+    max_kandidat = 82
     
     while processed_kandidat < max_kandidat:
         try:
@@ -311,11 +311,21 @@ try:
 
                             # Scrap data program usulan
                     try:
-                                program_usulan_container = driver.find_element(By.XPATH, "//div[h3[text()='PROGRAM USULAN']]")
-                                program_usulan = program_usulan_container.find_element(By.XPATH, ".//li[@class='list-group-item']//strong").text
-                                data['program_usulan'] = program_usulan
+                        # Cari container utama berdasarkan header "PROGRAM USULAN"
+                        program_usulan_container = driver.find_element(By.XPATH, "//div[h3[contains(text(), 'PROGRAM USULAN')]]")
+                        
+                        # Ambil semua elemen <li> yang ada di dalam kontainer
+                        program_usulan_items = program_usulan_container.find_elements(By.XPATH, ".//li[@class='list-group-item']//strong")
+                        
+                        # Gabungkan teks dari setiap elemen <li> menjadi satu string
+                        program_usulan = " ".join([item.text for item in program_usulan_items])
+                        
+                        # Masukkan hasil ke dalam dictionary data
+                        data['program_usulan'] = program_usulan
+                    
                     except NoSuchElementException:
-                                print(f"Data program usulan untuk kandidat ke-{processed_kandidat + 1} tidak ditemukan.")
+                        print(f"Data program usulan untuk kandidat ke-{processed_kandidat + 1} tidak ditemukan.")
+                    
 
 
                             # Scrap riwayat pasangan
@@ -353,13 +363,13 @@ try:
                     processed_kandidat += 1
 
             except StaleElementReferenceException:
-                driver.get("https://infopemilu.kpu.go.id/Pemilu/Dct_dprprov")
+                driver.get("https://infopemilu.kpu.go.id/Pemilu/Dct_dprd")
                 pilih_dapil_aceh_1(current_page)
                 continue
 
         except Exception as e:
             print(f"Gagal memproses kandidat di Halaman {current_page}, Kandidat ke-{processed_kandidat + 1}: {e}")
-            driver.get("https://infopemilu.kpu.go.id/Pemilu/Dct_dprprov")
+            driver.get("https://infopemilu.kpu.go.id/Pemilu/Dct_dprd")
             pilih_dapil_aceh_1(current_page)
             continue
 
@@ -375,7 +385,7 @@ finally:
         fieldnames = list(fieldnames)
 
         # Simpan ke CSV
-        with open('JAWA TIMUR 2.csv', 'w', newline='', encoding='utf-8') as file:
+        with open('ACEH TENGGARA 2.csv', 'w', newline='', encoding='utf-8') as file:
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(kandidat_data)
